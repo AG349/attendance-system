@@ -3,12 +3,13 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
+const app = express();
+
 const authRoutes = require("./routes/auth.routes");
 const adminRoutes = require("./routes/admin.routes");
 const sessionRoutes = require("./routes/session.routes");
 const { ensureDefaultAdmin } = require("./controllers/auth.controller");
 
-const app = express();
 
 app.use(cors());
 app.use(express.json());
