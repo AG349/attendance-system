@@ -1,15 +1,48 @@
 const mysql = require("mysql2");
 require("dotenv").config();
 
+// Use Railway variables first (if present), otherwise fallback to DB_*,
+// otherwise fallback to local development defaults.
 const db = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "attendance_db",
-  port: Number(process.env.DB_PORT || 3306),
+  host:
+    process.env.MYSQLHOST ||
+    process.env.DB_HOST ||
+    "localhost",
+
+  user:
+    process.env.MYSQLUSER ||
+    process.env.DB_USER ||
+    "root",
+
+  password:
+    process.env.MYSQLPASSWORD ||
+    process.env.DB_PASSWORD ||
+    "",
+
+  database:
+    process.env.MYSQLDATABASE ||
+    process.env.DB_NAME ||
+    "attendance_db",
+
+  port: Number(
+    process.env.MYSQLPORT ||
+    process.env.DB_PORT ||
+    3306
+  ),
+
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+});
+
+// Optional: log connection test (helps debugging on Render)
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error("❌ Database connection failed:", err.message);
+  } else {
+    console.log("✅ Database connected successfully");
+    connection.release();
+  }
 });
 
 module.exports = db;
