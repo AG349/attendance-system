@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Attendance System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>🎓 Smart Attendance System</h1>
+      <p>Automated Classroom Attendance</p>
+    </header>
+
+    <!-- ROLE SELECTION -->
+    <div class="role-selection section" id="roleSelection">
+      <h2>Select Your Role</h2>
+
+      <div class="role-buttons">
+        <button onclick="showTeacherLogin()" class="btn btn-teacher">👨‍🏫 Teacher</button>
+        <button onclick="showStudentAlternative()" class="btn btn-student">👨‍🎓 Student</button>
+      </div>
+
+      <div class="admin-entry">
+        <button onclick="showAdminLogin()" class="btn btn-admin">🛠️ Admin</button>
+      </div>
+    </div>
+
+    <!-- ADMIN LOGIN -->
+    <div class="section" id="adminLogin" style="display:none;">
+      <h2>Admin Login</h2>
+      <p class="subtitle">Login to manage teachers, students, routine, accounts</p>
+
+      <div class="admin-login-card">
+        <div class="form-group">
+          <label for="adminEmail">Admin Username</label>
+          <input id="adminEmail" class="form-control" type="text" placeholder="admin" />
+        </div>
+        <div class="form-group">
+          <label for="adminPassword">Password</label>
+          <input id="adminPassword" class="form-control" type="password" placeholder="Enter password" />
+        </div>
+
+        <button onclick="adminLogin()" class="btn btn-primary btn-large">🔐 Login</button>
+        <div class="status-message" id="adminLoginStatus"></div>
+      </div>
+
+      <button onclick="showRoleSelection()" class="btn btn-back">← Back</button>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div class="section" id="adminDashboard" style="display:none;">
+      <div class="dashboard-header">
+        <h2>🛠️ Admin Dashboard</h2>
+        <button onclick="adminLogout()" class="btn btn-logout">Logout</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showAdminTab('tabTeachers', this)">Teachers</button>
+        <button class="tab-btn" onclick="showAdminTab('tabStudents', this)">Students</button>
+        <button class="tab-btn" onclick="showAdminTab('tabRoutine', this); adminLoadRoutine()">Routine</button>
+        <button class="tab-btn" onclick="showAdminTab('tabAccounts', this); adminLoadUsers()">Accounts</button>
+      </div>
+
+      <!-- Teachers TAB -->
+      <div class="tab-panel" id="tabTeachers">
+        <div class="panel-grid">
+          <div class="panel">
+            <h3>Add Teacher</h3>
+            <div class="form-group">
+              <label>Name</label>
+              <input id="tName" class="form-control" placeholder="Teacher name" />
+            </div>
+            <div class="form-group">
+              <label>Fingerprint ID</label>
+              <input id="tFp" class="form-control" placeholder="FP001" />
+            </div>
+            <div class="form-group">
+              <label>RFID Card</label>
+              <input id="tRfid" class="form-control" placeholder="RFID001" />
+            </div>
+            <button class="btn btn-success btn-large" onclick="adminCreateTeacher()">➕ Add Teacher</button>
+            <div class="status-message" id="tStatus"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Create Teacher Login</h3>
+            <p class="subtitle small">Creates login in <code>users</code> table (role TEACHER)</p>
+            <div class="form-group">
+              <label>Teacher ID (from list)</label>
+              <input id="tlTeacherId" class="form-control" placeholder="e.g. 1" />
+            </div>
+            <div class="form-group">
+              <label>Email/Username</label>
+              <input id="tlEmail" class="form-control" placeholder="teacher1" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input id="tlPassword" class="form-control" placeholder="Strong password" />
+            </div>
+            <button class="btn btn-primary btn-large" onclick="adminCreateTeacherLogin()">🔑 Create Login</button>
+            <div class="status-message" id="tlStatus"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Teachers List</h3>
+            <button class="btn btn-secondary" onclick="adminLoadTeachers()">🔄 Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Fingerprint</th>
+                  <th>RFID</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="teachersTable">
+                <tr><td colspan="5" class="empty-message">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students TAB -->
+      <div class="tab-panel" id="tabStudents" style="display:none;">
+        <div class="panel-grid">
+          <div class="panel">
+            <h3>Add Student</h3>
+            <div class="form-group">
+              <label>Student ID (QR text)</label>
+              <input id="sStudentId" class="form-control" placeholder="AU/2025/01" />
+            </div>
+            <div class="form-group">
+              <label>Name</label>
+              <input id="sName" class="form-control" placeholder="Student name" />
+            </div>
+            <div class="form-group">
+              <label>Class ID</label>
+              <input id="sClassId" class="form-control" placeholder="e.g. 1" />
+            </div>
+            <button class="btn btn-success btn-large" onclick="adminCreateStudent()">➕ Add Student</button>
+            <div class="status-message" id="sStatus"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Create Student Login</h3>
+            <p class="subtitle small">Use <b>students table ID</b> (not AU/2025/01)</p>
+            <div class="form-group">
+              <label>Student Table ID (from list)</label>
+              <input id="slStudentTableId" class="form-control" placeholder="e.g. 5" />
+            </div>
+            <div class="form-group">
+              <label>Email/Username</label>
+              <input id="slEmail" class="form-control" placeholder="student1" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input id="slPassword" class="form-control" placeholder="Strong password" />
+            </div>
+            <button class="btn btn-primary btn-large" onclick="adminCreateStudentLogin()">🔑 Create Login</button>
+            <div class="status-message" id="slStatus"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Students List</h3>
+            <button class="btn btn-secondary" onclick="adminLoadStudents()">🔄 Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Class ID</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTable">
+                <tr><td colspan="5" class="empty-message">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Routine TAB -->
+      <div class="tab-panel" id="tabRoutine" style="display:none;">
+        <div class="panel-grid">
+          <div class="panel">
+            <h3>Add Routine</h3>
+            <p class="subtitle small">Teacher connected directly to routine</p>
+
+            <div class="form-group">
+              <label>Class ID</label>
+              <input id="rClassId" class="form-control" placeholder="e.g. 1" />
+            </div>
+            <div class="form-group">
+              <label>Subject ID</label>
+              <input id="rSubjectId" class="form-control" placeholder="e.g. 1" />
+            </div>
+            <div class="form-group">
+              <label>Teacher ID</label>
+              <input id="rTeacherId" class="form-control" placeholder="e.g. 1" />
+            </div>
+
+            <div class="form-group">
+              <label>Day</label>
+              <select id="rDay" class="form-control">
+                <option value="MON">MON</option>
+                <option value="TUE">TUE</option>
+                <option value="WED">WED</option>
+                <option value="THU">THU</option>
+                <option value="FRI">FRI</option>
+                <option value="SAT">SAT</option>
+              </select>
+            </div>
+
+            <div class="panel-grid-two">
+              <div class="form-group">
+                <label>Start Time</label>
+                <input id="rStart" class="form-control" type="time" />
+              </div>
+              <div class="form-group">
+                <label>End Time</label>
+                <input id="rEnd" class="form-control" type="time" />
+              </div>
+            </div>
+
+            <button class="btn btn-success btn-large" onclick="adminCreateRoutine()">➕ Add Routine</button>
+            <div class="status-message" id="rStatus"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Edit Routine</h3>
+            <p class="subtitle small">Enter Routine ID and update fields</p>
+
+            <div class="form-group">
+              <label>Routine ID</label>
+              <input id="ruId" class="form-control" placeholder="e.g. 10" />
+            </div>
+
+            <div class="form-group">
+              <label>Class ID</label>
+              <input id="ruClassId" class="form-control" placeholder="e.g. 1" />
+            </div>
+            <div class="form-group">
+              <label>Subject ID</label>
+              <input id="ruSubjectId" class="form-control" placeholder="e.g. 1" />
+            </div>
+            <div class="form-group">
+              <label>Teacher ID</label>
+              <input id="ruTeacherId" class="form-control" placeholder="e.g. 1" />
+            </div>
+
+            <div class="form-group">
+              <label>Day</label>
+              <select id="ruDay" class="form-control">
+                <option value="MON">MON</option>
+                <option value="TUE">TUE</option>
+                <option value="WED">WED</option>
+                <option value="THU">THU</option>
+                <option value="FRI">FRI</option>
+                <option value="SAT">SAT</option>
+              </select>
+            </div>
+
+            <div class="panel-grid-two">
+              <div class="form-group">
+                <label>Start Time</label>
+                <input id="ruStart" class="form-control" type="time" />
+              </div>
+              <div class="form-group">
+                <label>End Time</label>
+                <input id="ruEnd" class="form-control" type="time" />
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-large" onclick="adminUpdateRoutine()">✏️ Update Routine</button>
+            <div class="status-message" id="ruStatus"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Routine List</h3>
+            <button class="btn btn-secondary" onclick="adminLoadRoutine()">🔄 Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Class</th>
+                  <th>Subject</th>
+                  <th>Teacher</th>
+                  <th>Day</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="routineTable">
+                <tr><td colspan="8" class="empty-message">No routine</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accounts TAB -->
+      <div class="tab-panel" id="tabAccounts" style="display:none;">
+        <div class="panel-grid">
+          <div class="panel">
+            <h3>Reset User Password</h3>
+            <p class="subtitle small">Passwords cannot be viewed. Admin can only reset.</p>
+
+            <div class="form-group">
+              <label>User ID</label>
+              <input id="rpUserId" class="form-control" placeholder="e.g. 3" />
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input id="rpNewPass" class="form-control" placeholder="Enter new password" />
+            </div>
+
+            <button class="btn btn-danger btn-large" onclick="adminResetPassword()">🔁 Reset Password</button>
+            <div class="status-message" id="rpStatus"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Accounts List</h3>
+            <p class="subtitle small">Shows which login is linked to which teacher/student.</p>
+            <button class="btn btn-secondary btn-large" onclick="adminLoadUsers()">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Linked</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable">
+                <tr><td colspan="5" class="empty-message">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEACHER LOGIN -->
+    <div class="section" id="teacherLogin" style="display:none;">
+      <h2>Teacher Login</h2>
+      <p class="subtitle">Authenticate to access the teacher dashboard</p>
+
+      <div class="auth-methods">
+        <div class="auth-card">
+          <div class="icon">👆</div>
+          <h3>Fingerprint</h3>
+          <button onclick="authenticateFingerprint()" class="btn btn-primary">Scan Fingerprint</button>
+          <p class="status" id="fingerprintStatus">Ready to scan</p>
+        </div>
+
+        <div class="auth-card">
+          <div class="icon">💳</div>
+          <h3>RFID Card</h3>
+          <button onclick="authenticateRFID()" class="btn btn-primary">Scan RFID Card</button>
+          <p class="status" id="rfidStatus">Ready to scan</p>
+        </div>
+
+        <div class="auth-card">
+          <div class="icon">🔐</div>
+          <h3>Email & Password</h3>
+          <div class="form-group">
+            <label>Email/Username</label>
+            <input id="teacherEmail" class="form-control" placeholder="teacher1" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input id="teacherPassword" class="form-control" type="password" placeholder="Enter password" />
+          </div>
+          <button onclick="teacherEmailLogin()" class="btn btn-primary btn-large">Login</button>
+          <div class="status-message" id="teacherLoginStatus"></div>
+        </div>
+      </div>
+
+      <button onclick="showRoleSelection()" class="btn btn-back">← Back</button>
+    </div>
+
+    <!-- TEACHER DASHBOARD -->
+    <div class="section" id="teacherDashboard" style="display:none;">
+      <div class="dashboard-header">
+        <h2>📊 Teacher Dashboard</h2>
+        <button onclick="logout()" class="btn btn-logout">Logout</button>
+      </div>
+
+      <div class="session-info">
+        <div class="info-card">
+          <h3>Class Info</h3>
+          <p><strong>Class:</strong> <span id="className">-</span></p>
+          <p><strong>Teacher:</strong> <span id="teacherName">-</span></p>
+          <p><strong>Status:</strong> <span class="badge badge-active" id="sessionStatus">Not Started</span></p>
+        </div>
+
+        <div class="info-card">
+          <h3>Time</h3>
+          <p><strong>Start Time:</strong> <span id="startTime">-</span></p>
+          <p><strong>Buffer Ends:</strong> <span id="bufferEnd">-</span></p>
+          <p><strong>Class Ends:</strong> <span id="classEnd">-</span></p>
+        </div>
+
+        <div class="info-card">
+          <h3>Attendance</h3>
+          <p><strong>Present:</strong> <span id="presentCount" class="count present">0</span></p>
+          <p><strong>Absent:</strong> <span id="absentCount" class="count absent">0</span></p>
+          <p><strong>Pending:</strong> <span id="pendingCount" class="count pending">0</span></p>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button onclick="startClass()" class="btn btn-success" id="startClassBtn">▶️ Start Class Session</button>
+        <button onclick="endClass()" class="btn btn-danger" id="endClassBtn" disabled>⏹️ End Class</button>
+      </div>
+
+      <div class="attendance-table">
+        <h3>Live Attendance</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Bench</th>
+              <th>Student</th>
+              <th>Check-in Time</th>
+              <th>Status</th>
+              <th>Validation</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTable">
+            <tr><td colspan="5" class="empty-message">No students checked in yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STUDENT OPTIONS -->
+    <div class="section" id="studentAlternative" style="display:none;">
+      <h2>Student</h2>
+      <p class="subtitle">Choose your option</p>
+
+      <div class="option-cards">
+        <div class="option-card" onclick="showStudentCheckIn()">
+          <div class="icon">✅</div>
+          <h3>Mark Attendance</h3>
+          <p>Bench + QR scan</p>
+        </div>
+
+        <div class="option-card" onclick="showStudentLogin()">
+          <div class="icon">🔐</div>
+          <h3>Login (View Attendance)</h3>
+          <p>Only to view your attendance</p>
+        </div>
+
+        <div class="option-card" onclick="showQRGunCheckIn()">
+          <div class="icon">🔫</div>
+          <h3>QR Gun + Numpad</h3>
+          <p>Classroom device method</p>
+        </div>
+      </div>
+
+      <button onclick="showRoleSelection()" class="btn btn-back">← Back</button>
+    </div>
+
+    <!-- STUDENT LOGIN -->
+    <div class="section" id="studentLogin" style="display:none;">
+      <h2>Student Login</h2>
+      <p class="subtitle">Login only to view your attendance</p>
+
+      <div class="admin-login-card">
+        <div class="form-group">
+          <label>Email/Username</label>
+          <input id="studentEmail" class="form-control" placeholder="student1" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input id="studentPassword" class="form-control" type="password" placeholder="Enter password" />
+        </div>
+
+        <button onclick="studentLogin()" class="btn btn-primary btn-large">🔐 Login</button>
+        <div class="status-message" id="studentLoginStatus"></div>
+      </div>
+
+      <button onclick="showStudentAlternative()" class="btn btn-back">← Back</button>
+    </div>
+
+    <!-- STUDENT DASHBOARD -->
+    <div class="section" id="studentDashboard" style="display:none;">
+      <div class="dashboard-header">
+        <h2>👨‍🎓 Student Dashboard</h2>
+        <button onclick="studentLogout()" class="btn btn-logout">Logout</button>
+      </div>
+
+      <div class="info-card">
+        <h3>Profile</h3>
+        <p><strong>Name:</strong> <span id="studentNameLabel">Student</span></p>
+        <p class="subtitle small" id="studentDashHint">
+          If you want a full attendance table here, tell me your backend endpoint name (URL) and response format.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Attendance</h3>
+          <button class="btn btn-secondary" onclick="loadStudentDashboard()">🔄 Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="studentAttendanceTable">
+              <tr><td colspan="3" class="empty-message">No data loaded</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENT CHECK-IN -->
+    <div class="section" id="studentCheckIn" style="display:none;">
+      <h2>Student Check-in</h2>
+      <p class="subtitle">Enter your bench number and scan your ID QR code</p>
+
+      <div class="form-group">
+        <label for="benchSelect">Select Your Bench:</label>
+        <select id="benchSelect" class="form-control" onchange="onBenchSelect()">
+          <option value="">-- Select Bench --</option>
+          <option value="DL11">DL11 - Row 1, Left</option>
+          <option value="DL12">DL12 - Row 1, Left</option>
+          <option value="DL13">DL13 - Row 1, Left</option>
+          <option value="DM11">DM11 - Row 1, Middle</option>
+          <option value="DM12">DM12 - Row 1, Middle</option>
+          <option value="DM13">DM13 - Row 1, Middle</option>
+          <option value="DR11">DR11 - Row 1, Right</option>
+          <option value="DR12">DR12 - Row 1, Right</option>
+          <option value="DR13">DR13 - Row 1, Right</option>
+          <option value="DL21">DL21 - Row 2, Left</option>
+          <option value="DL22">DL22 - Row 2, Left</option>
+          <option value="DL23">DL23 - Row 2, Left</option>
+          <option value="DM21">DM21 - Row 2, Middle</option>
+          <option value="DM22">DM22 - Row 2, Middle</option>
+          <option value="DM23">DM23 - Row 2, Middle</option>
+          <option value="DR21">DR21 - Row 2, Right</option>
+          <option value="DR22">DR22 - Row 2, Right</option>
+          <option value="DR23">DR23 - Row 2, Right</option>
+        </select>
+      </div>
+
+      <div class="qr-section">
+        <h3>Scan Your ID QR Code</h3>
+
+        <div class="qr-reader">
+          <video id="qrVideo" width="300" height="300" playsinline></video>
+          <canvas id="qrCanvas" style="display:none;"></canvas>
+
+          <div class="qr-overlay" id="qrOverlay">
+            <div class="qr-frame"></div>
+            <p>Position QR code here</p>
+          </div>
+        </div>
+
+        <div class="qr-actions">
+          <button onclick="startQRScanner()" class="btn btn-primary" id="startScannerBtn">📷 Open Camera</button>
+          <button onclick="stopQRScanner()" class="btn btn-secondary" id="stopScannerBtn" style="display:none;">⬛ Close Camera</button>
+        </div>
+
+        <p class="status" id="qrStatus">Camera is off</p>
+      </div>
+
+      <div class="manual-upload">
+        <p>Or upload QR code image:</p>
+        <input type="file" id="qrUpload" accept="image/*" class="form-control" />
+      </div>
+
+      <button onclick="submitCheckIn()" class="btn btn-success btn-large" id="submitBtn" disabled>✅ Submit Check-in</button>
+      <div class="status-message" id="checkInStatus"></div>
+
+      <button onclick="showStudentAlternative()" class="btn btn-back">← Back</button>
+    </div>
+
+    <!-- QR GUN CHECK-IN -->
+    <div class="section" id="qrGunCheckIn" style="display:none;">
+      <h2>Check-in (QR Gun / Numpad)</h2>
+      <p class="subtitle">For students without mobile phones</p>
+
+      <div class="qr-gun-section">
+        <div class="input-group">
+          <label>Step 1: Scan ID QR Code</label>
+          <input type="text" id="qrGunInput" class="form-control"
+                 placeholder="QR code data will appear here" readonly />
+          <div class="qr-gun-actions">
+            <button onclick="activateQRGun()" class="btn btn-primary">🔫 Activate QR Gun</button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Step 2: Enter Bench Number</label>
+
+          <div class="numpad-wrap">
+            <input type="text" id="numpadDisplay" class="numpad-display"
+                   placeholder="Bench number (e.g., DL11, DR12, DM23)" readonly />
+
+            <div class="numpad numpad-extended">
+              <button class="num-btn" onclick="numpadInput('D')">D</button>
+              <button class="num-btn" onclick="numpadInput('R')">R</button>
+              <button class="num-btn" onclick="numpadInput('L')">L</button>
+              <button class="num-btn" onclick="numpadInput('M')">M</button>
+
+              <button class="num-btn" onclick="numpadInput('1')">1</button>
+              <button class="num-btn" onclick="numpadInput('2')">2</button>
+              <button class="num-btn" onclick="numpadInput('3')">3</button>
+              <button class="num-btn" onclick="numpadInput('4')">4</button>
+
+              <button class="num-btn" onclick="numpadInput('5')">5</button>
+              <button class="num-btn" onclick="numpadInput('6')">6</button>
+              <button class="num-btn" onclick="numpadInput('7')">7</button>
+              <button class="num-btn" onclick="numpadInput('8')">8</button>
+
+              <button class="num-btn" onclick="numpadInput('9')">9</button>
+              <button class="num-btn" onclick="numpadInput('0')">0</button>
+              <button class="num-btn num-fn" onclick="numpadClear()">CE</button>
+              <button class="num-btn num-fn" onclick="numpadBackspace()">⌫</button>
+            </div>
+
+            <div class="numpad-enter-row">
+              <button class="num-btn num-enter" onclick="submitQRGunCheckIn()">↵ Enter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="showStudentAlternative()" class="btn btn-back">← Back</button>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+      <div class="spinner"></div>
+      <p id="loadingMessage">Processing...</p>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
